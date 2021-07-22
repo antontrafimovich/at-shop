@@ -1,6 +1,14 @@
 import { Injectable } from "@angular/core";
 import { from, merge, Observable, Subject } from "rxjs";
-import { first, map, mapTo, scan, switchMap } from "rxjs/operators";
+import {
+    first,
+    map,
+    mapTo,
+    scan,
+    shareReplay,
+    startWith,
+    switchMap
+} from "rxjs/operators";
 
 import { Product } from "../models";
 import { Action, ActionType } from "./../../shared/model";
@@ -19,7 +27,7 @@ export class CartService {
                     map((v) => this.getProductHasBeenAddedAction(v))
                 ),
                 this._productHasBeenRemoved$.pipe(
-                    map((v) => this.getProductHasBeenAddedAction(v))
+                    map((v) => this.getProductHasBeenRemovedAction(v))
                 )
             ).pipe(
                 scan((result, action) => {
@@ -30,9 +38,11 @@ export class CartService {
                     if (action.type === ActionType.Delete) {
                         return this.removeProdcutFromProductsList(result, action.payload);
                     }
-                }, prodcuts)
+                }, prodcuts),
+                startWith(prodcuts)
             )
-        )
+        ),
+        shareReplay(1)
     );
 
     constructor() {}
